@@ -1,13 +1,6 @@
 package com.lms.app.ui;
 
 import javafx.scene.Scene;
-
-/**
- * Applies styles.css to a scene without crashing the app if the file
- * can't be found on the classpath (e.g. a resources-folder misconfiguration).
- * If you see the warning below in your console, check that
- * src/main/resources/styles.css exists with exactly that name.
- */
 public class Styles {
 
     public static void apply(Scene scene) {

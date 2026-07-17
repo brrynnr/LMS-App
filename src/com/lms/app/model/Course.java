@@ -9,6 +9,9 @@ public class Course {
     private String title;
     private String description;
     private Instructor instructor;
+    private String program;
+    private String yearLevel;
+    private boolean isPrerequisite;
 
     private final ObservableList<Student> enrolledStudents = FXCollections.observableArrayList();
     private final ObservableList<Assignment> assignments = FXCollections.observableArrayList();
@@ -29,13 +32,21 @@ public class Course {
     public Instructor getInstructor() { return instructor; }
     public void setInstructor(Instructor instructor) { this.instructor = instructor; }
 
+    public String getProgram() { return program; }
+    public void setProgram(String program) { this.program = program; }
+
+    public String getYearLevel() { return yearLevel; }
+    public void setYearLevel(String yearLevel) { this.yearLevel = yearLevel; }
+
+    public boolean isPrerequisite() { return isPrerequisite; }
+    public void setPrerequisite(boolean prerequisite) { isPrerequisite = prerequisite; }
+
     public ObservableList<Student> getEnrolledStudents() { return enrolledStudents; }
     public ObservableList<Assignment> getAssignments() { return assignments; }
     public ObservableList<Announcement> getAnnouncements() { return announcements; }
 
     @Override
     public String toString() {
-        // Makes the object read nicely inside ComboBox / TableView cells.
         return title;
     }
 }

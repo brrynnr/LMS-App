@@ -22,8 +22,15 @@ public class InstructorDashboardView {
     public static Scene createScene(Instructor instructor) {
         BorderPane root = new BorderPane();
         root.setTop(buildHeader(instructor));
-        root.setCenter(buildTabs(instructor));
+
+        TabPane tabs = buildTabs(instructor);
+        root.setCenter(tabs);
         root.getStyleClass().add("root-pane");
+
+        // Save session on tab change
+        tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> {
+            if (now != null) Main.setSession(instructor.getUserId(), now.getText());
+        });
 
         Scene scene = new Scene(root, 900, 650);
         Styles.apply(scene);
@@ -35,7 +42,10 @@ public class InstructorDashboardView {
         welcome.getStyleClass().add("header-label");
 
         Button logoutButton = new Button("Logout");
-        logoutButton.setOnAction(e -> Main.getPrimaryStage().setScene(LoginView.createScene()));
+        logoutButton.setOnAction(e -> {
+            Main.clearSession();
+            Main.getPrimaryStage().setScene(LoginView.createScene());
+        });
 
         HBox header = new HBox(welcome, spacer(), logoutButton);
         header.setPadding(new Insets(15));
@@ -52,10 +62,18 @@ public class InstructorDashboardView {
                 new Tab("Grade Submissions", buildGradingTab(instructor))
         );
         tabs.getTabs().forEach(t -> t.setClosable(false));
+
+        // Restore last tab from session
+        String savedTab = Main.getCurrentTab();
+        if (savedTab != null) {
+            tabs.getTabs().stream()
+                    .filter(t -> t.getText().equals(savedTab))
+                    .findFirst()
+                    .ifPresent(t -> tabs.getSelectionModel().select(t));
+        }
         return tabs;
     }
 
-    // --- My Courses tab: read-only overview ---
     private static VBox buildCoursesTab(Instructor instructor) {
         TableView<Course> table = new TableView<>(instructor.getCoursesTaught());
         TableColumn<Course, String> titleCol = new TableColumn<>("Title");

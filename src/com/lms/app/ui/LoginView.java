@@ -28,6 +28,7 @@ public class LoginView {
 
         Button loginButton = new Button("Login");
         loginButton.getStyleClass().add("primary-button");
+        loginButton.setMaxWidth(260);
         loginButton.setOnAction(e -> {
             User user = DataStore.getInstance().authenticate(emailField.getText().trim(), passwordField.getText());
             if (user == null) {
@@ -37,6 +38,10 @@ public class LoginView {
             routeToDashboard(user);
         });
 
+        Button registerButton = new Button("Register Account");
+        registerButton.setMaxWidth(260);
+        registerButton.setOnAction(e -> Main.getPrimaryStage().setScene(RegisterView.createScene()));
+
         Label hint = new Label(
                 "Demo accounts:\n" +
                 "Student: sam@lms.com / learn123\n" +
@@ -45,7 +50,7 @@ public class LoginView {
         );
         hint.getStyleClass().add("hint-label");
 
-        VBox card = new VBox(12, titleLabel, emailField, passwordField, loginButton, statusLabel, hint);
+        VBox card = new VBox(12, titleLabel, emailField, passwordField, loginButton, registerButton, statusLabel, hint);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(40));
         card.setMaxWidth(360);
@@ -60,8 +65,8 @@ public class LoginView {
         return scene;
     }
 
-    /** Sends the user to the right dashboard based on which subclass they are. */
     private static void routeToDashboard(User user) {
+        Main.setSession(user.getUserId(), null);
         Scene scene;
         if (user instanceof Student student) {
             scene = StudentDashboardView.createScene(student);

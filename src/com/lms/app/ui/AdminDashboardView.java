@@ -20,8 +20,15 @@ public class AdminDashboardView {
     public static Scene createScene(Admin admin) {
         BorderPane root = new BorderPane();
         root.setTop(buildHeader(admin));
-        root.setCenter(buildTabs());
+
+        TabPane tabs = buildTabs(admin);
+        root.setCenter(tabs);
         root.getStyleClass().add("root-pane");
+
+        // Save session whenever the admin switches tabs
+        tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> {
+            if (now != null) Main.setSession(admin.getUserId(), now.getText());
+        });
 
         Scene scene = new Scene(root, 900, 650);
         Styles.apply(scene);
@@ -33,7 +40,10 @@ public class AdminDashboardView {
         welcome.getStyleClass().add("header-label");
 
         Button logoutButton = new Button("Logout");
-        logoutButton.setOnAction(e -> Main.getPrimaryStage().setScene(LoginView.createScene()));
+        logoutButton.setOnAction(e -> {
+            Main.clearSession();
+            Main.getPrimaryStage().setScene(LoginView.createScene());
+        });
 
         HBox header = new HBox(welcome, spacer(), logoutButton);
         header.setPadding(new Insets(15));
@@ -42,34 +52,65 @@ public class AdminDashboardView {
         return header;
     }
 
-    private static TabPane buildTabs() {
+    private static TabPane buildTabs(Admin admin) {
         TabPane tabs = new TabPane();
         tabs.getTabs().addAll(
                 new Tab("Manage Users", buildUsersTab()),
                 new Tab("Manage Courses", buildCoursesTab())
         );
         tabs.getTabs().forEach(t -> t.setClosable(false));
+
+        // Restore last tab if session had one saved
+        String savedTab = Main.getCurrentTab();
+        if (savedTab != null) {
+            tabs.getTabs().stream()
+                    .filter(t -> t.getText().equals(savedTab))
+                    .findFirst()
+                    .ifPresent(t -> tabs.getSelectionModel().select(t));
+        }
+
         return tabs;
     }
 
-    // --- Manage Users tab: add / remove users of any role ---
+    // --- Manage Users tab ---
     private static VBox buildUsersTab() {
         TableView<User> table = new TableView<>(DataStore.getInstance().getUsers());
+
         TableColumn<User, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
         TableColumn<User, String> emailCol = new TableColumn<>("Email");
         emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));
+
         TableColumn<User, String> roleCol = new TableColumn<>("Role");
         roleCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getRole()));
-        table.getColumns().addAll(nameCol, emailCol, roleCol);
 
-        TextField nameField = new TextField();
-        nameField.setPromptText("Full name");
-        TextField emailField = new TextField();
-        emailField.setPromptText("Email");
-        TextField passwordField = new TextField();
-        passwordField.setPromptText("Password");
-        ComboBox<String> roleBox = new ComboBox<>(FXCollections.observableArrayList("Student", "Instructor", "Admin"));
+        TableColumn<User, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().isActive() ? "Active" : "Deactivated"));
+
+        table.getColumns().addAll(nameCol, emailCol, roleCol, statusCol);
+
+        // Gray out deactivated users in the table
+        table.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(User user, boolean empty) {
+                super.updateItem(user, empty);
+                if (user == null || empty) {
+                    setStyle("");
+                } else if (!user.isActive()) {
+                    setStyle("-fx-text-fill: #aaaaaa; -fx-background-color: #f0f0f0;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
+
+        TextField nameField     = new TextField();  nameField.setPromptText("Full name");
+        TextField emailField    = new TextField();  emailField.setPromptText("Email");
+        TextField passwordField = new TextField();  passwordField.setPromptText("Password");
+        ComboBox<String> roleBox = new ComboBox<>(
+                FXCollections.observableArrayList("Student", "Instructor", "Admin"));
         roleBox.setPromptText("Role");
 
         Button addButton = new Button("Add User");
@@ -83,8 +124,8 @@ public class AdminDashboardView {
             String id = DataStore.getInstance().generateId("U");
             User newUser = switch (roleBox.getValue()) {
                 case "Instructor" -> new Instructor(id, nameField.getText(), emailField.getText(), passwordField.getText());
-                case "Admin" -> new Admin(id, nameField.getText(), emailField.getText(), passwordField.getText());
-                default -> new Student(id, nameField.getText(), emailField.getText(), passwordField.getText());
+                case "Admin"      -> new Admin(id, nameField.getText(), emailField.getText(), passwordField.getText());
+                default           -> new Student(id, nameField.getText(), emailField.getText(), passwordField.getText());
             };
             DataStore.getInstance().addUser(newUser);
             nameField.clear();
@@ -93,14 +134,29 @@ public class AdminDashboardView {
             roleBox.setValue(null);
         });
 
-        Button removeButton = new Button("Remove Selected");
+        // Soft-delete: marks user inactive, keeps the DB row with is_active = 0
+        Button removeButton = new Button("Deactivate Selected");
         removeButton.setOnAction(e -> {
             User selected = table.getSelectionModel().getSelectedItem();
             if (selected == null) {
-                showAlert("Select a user to remove.");
+                showAlert("Select a user to deactivate.");
                 return;
             }
-            DataStore.getInstance().removeUser(selected);
+            if (!selected.isActive()) {
+                showAlert(selected.getName() + " is already deactivated.");
+                return;
+            }
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Deactivate " + selected.getName() + "? They will no longer be able to log in.",
+                    ButtonType.YES, ButtonType.NO);
+            confirm.setHeaderText("Confirm Deactivation");
+            confirm.showAndWait().ifPresent(btn -> {
+                if (btn == ButtonType.YES) {
+                    DataStore.getInstance().removeUser(selected);
+                    table.refresh();
+                    showAlert(selected.getName() + " has been deactivated.");
+                }
+            });
         });
 
         HBox form = new HBox(10, nameField, emailField, passwordField, roleBox, addButton, removeButton);
@@ -111,9 +167,10 @@ public class AdminDashboardView {
         return box;
     }
 
-    // --- Manage Courses tab: add / remove courses ---
+    // --- Manage Courses tab ---
     private static VBox buildCoursesTab() {
         TableView<Course> table = new TableView<>(DataStore.getInstance().getCourses());
+
         TableColumn<Course, String> titleCol = new TableColumn<>("Title");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         TableColumn<Course, String> descCol = new TableColumn<>("Description");
@@ -123,10 +180,8 @@ public class AdminDashboardView {
                 data.getValue().getInstructor() == null ? "Unassigned" : data.getValue().getInstructor().getName()));
         table.getColumns().addAll(titleCol, descCol, instructorCol);
 
-        TextField titleField = new TextField();
-        titleField.setPromptText("Course title");
-        TextField descField = new TextField();
-        descField.setPromptText("Description");
+        TextField titleField = new TextField(); titleField.setPromptText("Course title");
+        TextField descField  = new TextField(); descField.setPromptText("Description");
 
         Button addButton = new Button("Add Course");
         addButton.getStyleClass().add("primary-button");
@@ -136,7 +191,8 @@ public class AdminDashboardView {
                 return;
             }
             String id = DataStore.getInstance().generateId("C");
-            DataStore.getInstance().addCourse(new Course(id, titleField.getText().trim(), descField.getText().trim(), null));
+            DataStore.getInstance().addCourse(
+                    new Course(id, titleField.getText().trim(), descField.getText().trim(), null));
             titleField.clear();
             descField.clear();
         });
