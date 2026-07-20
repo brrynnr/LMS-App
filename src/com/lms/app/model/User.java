@@ -1,10 +1,13 @@
 package com.lms.app.model;
 
+import java.io.Serializable;
+
 /**
  * Base class for everyone who can log into the system.
- * Student, Instructor, and Admin all extend this class (matches the class diagram).
  */
-public abstract class User {
+public abstract class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     protected String userId;
     protected String name;
@@ -26,9 +29,7 @@ public abstract class User {
     public String getPassword() { return password; }
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { this.isActive = active; }
-
     public void setName(String name) { this.name = name; }
 
-    /** Returns a human-readable role label, used for display in the UI. */
     public abstract String getRole();
 }
