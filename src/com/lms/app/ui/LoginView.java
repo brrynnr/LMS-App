@@ -57,6 +57,13 @@ public class LoginView {
             routeToDashboard(user);
         });
 
+        emailField.setOnKeyPressed(e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ENTER) loginButton.fire();
+        });
+        passwordField.setOnKeyPressed(e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ENTER) loginButton.fire();
+        });
+
         Button registerButton = new Button("Register Account");
         registerButton.setMaxWidth(260);
         registerButton.setOnAction(e ->

@@ -2,6 +2,7 @@ package com.lms.app.ui;
 
 import com.lms.app.Main;
 import com.lms.app.data.DataStore;
+import com.lms.app.data.DatabaseManager;
 import com.lms.app.model.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -128,6 +129,14 @@ public class RegisterView {
                 FXCollections.observableArrayList("Student", "Instructor", "Admin"));
         roleBox.setPromptText("Account Type");
         roleBox.setMaxWidth(260);
+
+        Label dbWarningLabel = new Label();
+        dbWarningLabel.getStyleClass().add("error-label");
+        dbWarningLabel.setWrapText(true);
+        dbWarningLabel.setMaxWidth(260);
+        if (!DatabaseManager.getInstance().isConnected()) {
+            dbWarningLabel.setText("Warning: Database not connected. Accounts will not persist after restart.");
+        }
 
         // --- Student fields (shown when Student is selected) ---
         Label studentHeaderLabel = new Label("Student Information");
@@ -275,9 +284,11 @@ public class RegisterView {
             };
             DataStore.getInstance().addUser(newUser);
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION,
-                    "Account created successfully!\nYou can now log in with your credentials.",
-                    ButtonType.OK);
+            boolean dbSaved = DatabaseManager.getInstance().isConnected();
+            String successMsg = dbSaved
+                ? "Account created successfully!\nYou can now log in with your credentials."
+                : "Account created successfully!\nYou can now log in with your credentials.\nNote: Database not connected. Account will not persist after restart.";
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, successMsg, ButtonType.OK);
             alert.setHeaderText("Registration Successful");
             alert.showAndWait();
 
@@ -296,6 +307,7 @@ public class RegisterView {
                 passwordField,
                 confirmPasswordField,
                 roleBox,
+                dbWarningLabel,
                 separator,
                 studentFields,
                 instructorFields,
@@ -317,9 +329,9 @@ public class RegisterView {
     }
 
     /**
-     * Creates an editable ComboBox with autofill/autocomplete behavior.
+     * Creates an editable ComboBox with filtering behavior.
      * As the user types, the dropdown filters to show matching items.
-     * If exactly one item matches, it is auto-selected.
+     * The user can freely change their selection at any time.
      */
     private static ComboBox<String> createAutocompleteCombo(String[] items) {
         ObservableList<String> options = FXCollections.observableArrayList(items);
@@ -329,16 +341,12 @@ public class RegisterView {
         combo.setEditable(true);
 
         TextField editor = combo.getEditor();
-        combo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                editor.setText(newVal);
-            }
-        });
 
         editor.textProperty().addListener((obs, oldText, newText) -> {
             if (newText == null || newText.isBlank()) {
                 filteredItems.setPredicate(p -> true);
-                combo.show();
+                combo.getSelectionModel().clearSelection();
+                if (editor.isFocused()) combo.show();
                 return;
             }
 
@@ -347,35 +355,14 @@ public class RegisterView {
 
             if (filteredItems.isEmpty()) {
                 combo.hide();
-            } else {
+            } else if (editor.isFocused()) {
                 combo.show();
-            }
-
-            // Auto-select if exactly one match
-            if (filteredItems.size() == 1) {
-                String match = filteredItems.get(0);
-                if (!match.equalsIgnoreCase(editor.getText())) {
-                    combo.getSelectionModel().select(match);
-                    editor.setText(match);
-                    editor.positionCaret(match.length());
-                }
             }
         });
 
-        editor.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
-            if (!isFocused) {
-                String text = editor.getText();
-                if (text != null && !text.isBlank()) {
-                    // Try to find an exact or close match and select it
-                    String lower = text.toLowerCase();
-                    for (String item : items) {
-                        if (item.equalsIgnoreCase(text) || item.toLowerCase().startsWith(lower)) {
-                            combo.getSelectionModel().select(item);
-                            editor.setText(item);
-                            break;
-                        }
-                    }
-                }
+        combo.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.equals(editor.getText())) {
+                editor.setText(newVal);
             }
         });
 
