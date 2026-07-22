@@ -133,7 +133,8 @@ The following UML diagrams were created during the system design phase.
 
 ## Sequence Diagram
 
-<img width="1052" height="663" alt="SequenceDiagram drawio" src="https://github.com/user-attachments/assets/a8dcb66a-fd15-4b8d-aedd-e9a3fca1fb41" />
+<img width="1100" height="710" alt="image" src="https://github.com/user-attachments/assets/43917ffe-7a09-4da0-98db-0b2d99574a87" />
+
 
 
 ---
