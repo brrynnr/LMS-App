@@ -104,36 +104,42 @@ public class RegisterView {
     };
 
     public static Scene createScene() {
-        Label titleLabel = new Label("Create an Account");
+        Label titleLabel = new Label("Create your Brisbane Technological University Account");
         titleLabel.getStyleClass().add("title-label");
+
+        Label subtitle = new Label(
+                "Complete the information below to access the Learning Management System.");
+        subtitle.getStyleClass().add("hint-label");
+        subtitle.setWrapText(true);
+        subtitle.setMaxWidth(380);
 
         // --- Common fields ---
         TextField nameField = new TextField();
         nameField.setPromptText("Full Name");
-        nameField.setMaxWidth(260);
+        nameField.setMaxWidth(380);
 
         TextField emailField = new TextField();
         emailField.setPromptText("Email Address");
-        emailField.setMaxWidth(260);
+        emailField.setMaxWidth(380);
 
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Password");
-        passwordField.setMaxWidth(260);
+        passwordField.setMaxWidth(380);
 
         PasswordField confirmPasswordField = new PasswordField();
         confirmPasswordField.setPromptText("Confirm Password");
-        confirmPasswordField.setMaxWidth(260);
+        confirmPasswordField.setMaxWidth(380);
 
         // --- Account type selector ---
         ComboBox<String> roleBox = new ComboBox<>(
                 FXCollections.observableArrayList("Student", "Instructor", "Admin"));
         roleBox.setPromptText("Account Type");
-        roleBox.setMaxWidth(260);
+        roleBox.setMaxWidth(380);
 
         Label dbWarningLabel = new Label();
         dbWarningLabel.getStyleClass().add("error-label");
         dbWarningLabel.setWrapText(true);
-        dbWarningLabel.setMaxWidth(260);
+        dbWarningLabel.setMaxWidth(380);
         if (!DatabaseManager.getInstance().isConnected()) {
             dbWarningLabel.setText("Warning: Database not connected. Accounts will not persist after restart.");
         }
@@ -144,11 +150,11 @@ public class RegisterView {
 
         ComboBox<String> yearLevelBox = createAutocompleteCombo(YEAR_LEVELS);
         yearLevelBox.setPromptText("Year Level");
-        yearLevelBox.setMaxWidth(260);
+        yearLevelBox.setMaxWidth(380);
 
         ComboBox<String> programBox = createAutocompleteCombo(PROGRAMS);
         programBox.setPromptText("Program / Course");
-        programBox.setMaxWidth(260);
+        programBox.setMaxWidth(380);
 
         VBox studentFields = new VBox(8, studentHeaderLabel, yearLevelBox, programBox);
         studentFields.setVisible(false);
@@ -160,11 +166,11 @@ public class RegisterView {
 
         ComboBox<String> departmentBox = createAutocompleteCombo(DEPARTMENTS);
         departmentBox.setPromptText("Department / College");
-        departmentBox.setMaxWidth(260);
+        departmentBox.setMaxWidth(380);
 
         ComboBox<String> designationBox = createAutocompleteCombo(DESIGNATIONS);
         designationBox.setPromptText("Designation / Rank");
-        designationBox.setMaxWidth(260);
+        designationBox.setMaxWidth(380);
 
         VBox instructorFields = new VBox(8, instructorHeaderLabel, departmentBox, designationBox);
         instructorFields.setVisible(false);
@@ -195,12 +201,13 @@ public class RegisterView {
         Label statusLabel = new Label();
         statusLabel.getStyleClass().add("error-label");
         statusLabel.setWrapText(true);
-        statusLabel.setMaxWidth(260);
+        statusLabel.setMaxWidth(380);
 
         // --- Register button ---
         Button registerButton = new Button("Register");
         registerButton.getStyleClass().add("primary-button");
-        registerButton.setMaxWidth(260);
+        registerButton.setPrefHeight(45);
+        registerButton.setMaxWidth(380);
         registerButton.setOnAction(e -> {
             String name     = nameField.getText().trim();
             String email    = emailField.getText().trim();
@@ -297,11 +304,16 @@ public class RegisterView {
 
         // --- Back to Login link ---
         Hyperlink backLink = new Hyperlink("Already have an account? Log in");
+        backLink.setStyle(
+                "-fx-text-fill:#9F2042;" +
+                        "-fx-font-weight:bold;" +
+                        "-fx-font-size:13px;");
         backLink.setOnAction(e -> Main.getPrimaryStage().setScene(LoginView.createScene()));
 
         // --- Layout ---
-        VBox card = new VBox(10,
+        VBox card = new VBox(15,
                 titleLabel,
+                subtitle,
                 nameField,
                 emailField,
                 passwordField,
@@ -316,14 +328,14 @@ public class RegisterView {
                 backLink);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(40));
-        card.setMaxWidth(360);
+        card.setMaxWidth(520);
         card.getStyleClass().add("login-card");
 
         VBox root = new VBox(card);
         root.setAlignment(Pos.CENTER);
         root.getStyleClass().add("root-pane");
 
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1000, 700);
         Styles.apply(scene);
         return scene;
     }

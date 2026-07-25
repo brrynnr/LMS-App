@@ -42,11 +42,24 @@ public class DataStore {
         db.loadAssignments(dbCourses);
         db.loadAnnouncements(dbCourses);
 
-        // Wire instructors <-> courses
         for (Course c : dbCourses) {
             if (c.getInstructor() != null) {
                 ObservableList<Course> taught = c.getInstructor().getCoursesTaught();
-                if (!taught.contains(c)) taught.add(c);
+
+                if (!taught.contains(c)) {
+                    taught.add(c);
+                }
+
+                System.out.println(
+                        c.getTitle() + " added to " +
+                                c.getInstructor().getName() +
+                                " | total = " +
+                                c.getInstructor().getCoursesTaught().size()
+                );
+            } else {
+                System.out.println(
+                        "Course " + c.getTitle() + " has NO instructor."
+                );
             }
         }
 

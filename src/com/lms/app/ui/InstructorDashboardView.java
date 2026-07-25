@@ -32,30 +32,72 @@ public class InstructorDashboardView {
             if (now != null) Main.setSession(instructor.getUserId(), now.getText());
         });
 
-        Scene scene = new Scene(root, 900, 650);
+        Scene scene = new Scene(root, 1200, 750);
         Styles.apply(scene);
         return scene;
     }
 
     private static HBox buildHeader(Instructor instructor) {
-        Label welcome = new Label("Welcome, " + instructor.getName() + " (Instructor)");
+
+        Label university = new Label("Brisbane Technological University");
+        university.getStyleClass().add("header-label");
+
+        Label system = new Label("Learning Management System");
+        system.getStyleClass().add("header-sublabel");
+
+        Label welcome = new Label("Welcome, " + instructor.getName());
         welcome.getStyleClass().add("header-label");
 
+        String info = "";
+
+        if (instructor.getDepartment() != null &&
+                instructor.getDesignation() != null) {
+
+            info = instructor.getDesignation() +
+                    " • " +
+                    instructor.getDepartment();
+        }
+
+        Label infoLabel = new Label(info);
+        infoLabel.getStyleClass().add("header-sublabel");
+
         Button logoutButton = new Button("Logout");
+        logoutButton.getStyleClass().add("primary-button");
+        logoutButton.setPrefWidth(110);
+        logoutButton.setPrefHeight(40);
+
         logoutButton.setOnAction(e -> {
             Main.clearSession();
             Main.getPrimaryStage().setScene(LoginView.createScene());
         });
 
-        HBox header = new HBox(welcome, spacer(), logoutButton);
+        VBox titles = new VBox(
+                university,
+                system,
+                welcome,
+                infoLabel
+        );
+
+        titles.setSpacing(2);
+
+        HBox header = new HBox(
+                titles,
+                spacer(),
+                logoutButton
+        );
+
         header.setPadding(new Insets(15));
         header.setAlignment(Pos.CENTER_LEFT);
         header.getStyleClass().add("header-bar");
+
         return header;
     }
 
     private static TabPane buildTabs(Instructor instructor) {
         TabPane tabs = new TabPane();
+        tabs.setTabMinWidth(180);
+        tabs.setTabMinHeight(45);
+
         tabs.getTabs().addAll(
                 new Tab("My Courses", buildCoursesTab(instructor)),
                 new Tab("Post Announcement", buildAnnouncementTab(instructor)),
@@ -76,6 +118,9 @@ public class InstructorDashboardView {
 
     private static VBox buildCoursesTab(Instructor instructor) {
         TableView<Course> table = new TableView<>(instructor.getCoursesTaught());
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefHeight(350);
+
         TableColumn<Course, String> titleCol = new TableColumn<>("Title");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         TableColumn<Course, String> descCol = new TableColumn<>("Description");
@@ -85,8 +130,17 @@ public class InstructorDashboardView {
                 new SimpleIntegerProperty(data.getValue().getEnrolledStudents().size()));
         table.getColumns().addAll(titleCol, descCol, enrolledCol);
 
-        VBox box = new VBox(10, table);
-        box.setPadding(new Insets(15));
+        Label title = new Label("Courses You Teach");
+        title.getStyleClass().add("section-header");
+
+        VBox box = new VBox(
+                15,
+                title,
+                table
+        );
+
+        box.setPadding(new Insets(20));
+
         return box;
     }
 
@@ -96,10 +150,14 @@ public class InstructorDashboardView {
         courseBox.setPromptText("Select a course");
 
         TextArea messageArea = new TextArea();
+        messageArea.setPrefHeight(180);
+
         messageArea.setPromptText("Write your announcement here...");
         messageArea.setPrefRowCount(5);
 
         Button postButton = new Button("Post Announcement");
+        postButton.setPrefHeight(42);
+
         postButton.getStyleClass().add("primary-button");
         postButton.setOnAction(e -> {
             Course selected = courseBox.getValue();
@@ -113,8 +171,19 @@ public class InstructorDashboardView {
             showAlert("Announcement posted to " + selected.getTitle() + ".");
         });
 
-        VBox box = new VBox(10, courseBox, messageArea, postButton);
-        box.setPadding(new Insets(15));
+        Label title = new Label("Create Announcement");
+        title.getStyleClass().add("section-header");
+
+        VBox box = new VBox(
+                15,
+                title,
+                courseBox,
+                messageArea,
+                postButton
+        );
+
+        box.setPadding(new Insets(20));
+
         return box;
     }
 
@@ -128,6 +197,9 @@ public class InstructorDashboardView {
         }
 
         TableView<Submission> table = new TableView<>(submissions);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefHeight(350);
+
         TableColumn<Submission, String> studentCol = new TableColumn<>("Student");
         studentCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStudent().getName()));
         TableColumn<Submission, String> assignCol = new TableColumn<>("Assignment");
@@ -142,6 +214,8 @@ public class InstructorDashboardView {
         feedbackField.setPromptText("Feedback");
 
         Button gradeButton = new Button("Submit Grade");
+        gradeButton.setPrefHeight(42);
+
         gradeButton.getStyleClass().add("primary-button");
         gradeButton.setOnAction(e -> {
             Submission selected = table.getSelectionModel().getSelectedItem();
@@ -163,8 +237,20 @@ public class InstructorDashboardView {
             showAlert("Grade submitted.");
         });
 
-        VBox box = new VBox(10, table, scoreField, feedbackField, gradeButton);
-        box.setPadding(new Insets(15));
+        Label title = new Label("Student Submissions");
+        title.getStyleClass().add("section-header");
+
+        VBox box = new VBox(
+                15,
+                title,
+                table,
+                scoreField,
+                feedbackField,
+                gradeButton
+        );
+
+        box.setPadding(new Insets(20));
+
         return box;
     }
 

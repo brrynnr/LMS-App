@@ -20,23 +20,30 @@ public class LoginView {
 
     public static Scene createScene() {
 
-        Label titleLabel = new Label("Learning Management System");
-        titleLabel.getStyleClass().add("title-label");
+        Label universityLabel = new Label("Brisbane Technological University");
+        universityLabel.getStyleClass().add("title-label");
+
+        Label systemLabel = new Label("Learning Management System");
+        systemLabel.getStyleClass().add("subtitle-label");
+
+        Label welcomeLabel = new Label("Welcome Back");
+        welcomeLabel.getStyleClass().add("welcome-label");
 
         TextField emailField = new TextField();
-        emailField.setPromptText("Email");
-        emailField.setMaxWidth(260);
+        emailField.setPromptText("University Email");
+        emailField.setMaxWidth(360);
 
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Password");
-        passwordField.setMaxWidth(260);
+        passwordField.setMaxWidth(360);
 
         Label statusLabel = new Label();
         statusLabel.getStyleClass().add("error-label");
 
-        Button loginButton = new Button("Login");
+        Button loginButton = new Button("Sign In");
         loginButton.getStyleClass().add("primary-button");
-        loginButton.setMaxWidth(260);
+        loginButton.setMaxWidth(Double.MAX_VALUE);
+        loginButton.setPrefHeight(42);
 
         loginButton.setOnAction(e -> {
 
@@ -45,64 +52,64 @@ public class LoginView {
                             passwordField.getText());
 
             if (user == null) {
-                statusLabel.setText("Invalid email or password. Try again.");
+                statusLabel.setText("Invalid email or password.");
                 return;
             }
 
-            // ============================
-            // Save serialized session
-            // ============================
             sessionService.saveSession(user);
 
             routeToDashboard(user);
         });
 
         emailField.setOnKeyPressed(e -> {
-            if (e.getCode() == javafx.scene.input.KeyCode.ENTER) loginButton.fire();
-        });
-        passwordField.setOnKeyPressed(e -> {
-            if (e.getCode() == javafx.scene.input.KeyCode.ENTER) loginButton.fire();
+            if (e.getCode() == javafx.scene.input.KeyCode.ENTER)
+                loginButton.fire();
         });
 
-        Button registerButton = new Button("Register Account");
-        registerButton.setMaxWidth(260);
+        passwordField.setOnKeyPressed(e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ENTER)
+                loginButton.fire();
+        });
+
+        Button registerButton = new Button("Create Account");
+        registerButton.setMaxWidth(Double.MAX_VALUE);
+        registerButton.setPrefHeight(42);
+
         registerButton.setOnAction(e ->
                 Main.getPrimaryStage().setScene(RegisterView.createScene()));
 
-        Label hint = new Label(
-                "Demo accounts:\n" +
-                        "Student: sam@lms.com / learn123\n" +
-                        "Instructor: jamie@lms.com / teach123\n" +
-                        "Admin: admin@lms.com / admin123"
-        );
-        hint.getStyleClass().add("hint-label");
 
         VBox card = new VBox(
-                12,
-                titleLabel,
+                15,
+                universityLabel,
+                systemLabel,
+                new Separator(),
+                welcomeLabel,
                 emailField,
                 passwordField,
                 loginButton,
                 registerButton,
-                statusLabel,
-                hint
+                statusLabel
         );
 
         card.setAlignment(Pos.CENTER);
-        card.setPadding(new Insets(40));
-        card.setMaxWidth(360);
+        card.setPadding(new Insets(45));
+        card.setMaxWidth(520);
+
         card.getStyleClass().add("login-card");
 
         VBox root = new VBox(card);
+
         root.setAlignment(Pos.CENTER);
+
         root.getStyleClass().add("root-pane");
 
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1000, 700);
+
         Styles.apply(scene);
 
         return scene;
     }
-
     private static void routeToDashboard(User user) {
 
         Main.setSession(user.getUserId(), null);

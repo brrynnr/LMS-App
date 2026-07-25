@@ -242,15 +242,28 @@ public class DatabaseManager {
                 String title = rs.getString("title");
                 String desc  = rs.getString("description");
                 String iid   = rs.getString("instructor_id");
+
                 Instructor instructor = users.stream()
                         .filter(u -> u.getUserId().equals(iid) && u instanceof Instructor)
                         .map(u -> (Instructor) u)
                         .findFirst().orElse(null);
+
+                System.out.println(
+                        "Course " + title +
+                                " -> instructor_id=" + iid +
+                                " -> found=" + (instructor == null ? "null" : instructor.getName())
+                );
+
                 Course c = new Course(cid, title, desc == null ? "" : desc, instructor);
+
                 c.setProgram(rs.getString("program"));
                 c.setYearLevel(rs.getString("year_level"));
                 c.setPrerequisite(rs.getBoolean("is_prerequisite"));
                 list.add(c);
+
+                if (instructor != null) {
+                    instructor.getCoursesTaught().add(c);
+                }
             }
         } catch (SQLException e) {
             System.err.println("[DB] loadCourses failed: " + e.getMessage());

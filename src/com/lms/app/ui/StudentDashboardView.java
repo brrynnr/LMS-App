@@ -23,6 +23,8 @@ public class StudentDashboardView {
         root.setTop(buildHeader(student));
 
         TabPane tabs = buildTabs(student);
+        tabs.setTabMinWidth(170);
+        tabs.setTabMinHeight(45);
         root.setCenter(tabs);
         root.getStyleClass().add("root-pane");
 
@@ -31,13 +33,20 @@ public class StudentDashboardView {
             if (now != null) Main.setSession(student.getUserId(), now.getText());
         });
 
-        Scene scene = new Scene(root, 900, 650);
+        Scene scene = new Scene(root, 1200, 750);
         Styles.apply(scene);
         return scene;
     }
 
     private static HBox buildHeader(Student student) {
-        Label welcome = new Label("Welcome, " + student.getName() + " (Student)");
+        Label university = new Label("Brisbane Technological University");
+        university.getStyleClass().add("header-label");
+
+        Label system = new Label("Learning Management System");
+        system.getStyleClass().add("header-sublabel");
+
+        Label welcome = new Label("Welcome, " + student.getName());
+        welcome.getStyleClass().add("header-sublabel");
         welcome.getStyleClass().add("header-label");
 
         String info = "";
@@ -48,15 +57,33 @@ public class StudentDashboardView {
         infoLabel.getStyleClass().add("header-sublabel");
 
         Button logoutButton = new Button("Logout");
+        logoutButton.getStyleClass().add("primary-button");
+        logoutButton.setPrefWidth(110);
+        logoutButton.setPrefHeight(40);
         logoutButton.setOnAction(e -> {
             Main.clearSession();
             Main.getPrimaryStage().setScene(LoginView.createScene());
         });
 
-        HBox header = new HBox(welcome, infoLabel, spacer(), logoutButton);
+        VBox titles = new VBox(
+                university,
+                system,
+                welcome,
+                infoLabel
+        );
+
+        titles.setSpacing(2);
+
+        HBox header = new HBox(
+                titles,
+                spacer(),
+                logoutButton
+        );
+
         header.setPadding(new Insets(15));
         header.setAlignment(Pos.CENTER_LEFT);
         header.getStyleClass().add("header-bar");
+
         return header;
     }
 
@@ -83,10 +110,12 @@ public class StudentDashboardView {
 
     private static VBox buildCoursesTab(Student student) {
         // --- Enrolled Courses ---
-        Label enrolledLabel = new Label("Enrolled Courses");
+        Label enrolledLabel = new Label("My Enrolled Courses");
         enrolledLabel.getStyleClass().add("section-header");
 
         TableView<Course> enrolledTable = new TableView<>(student.getEnrolledCourses());
+        enrolledTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        enrolledTable.setPrefHeight(260);
 
         TableColumn<Course, String> enrolledTitleCol = new TableColumn<>("Course");
         enrolledTitleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -113,11 +142,13 @@ public class StudentDashboardView {
         enrolledTable.getColumns().addAll(enrolledTitleCol, enrolledDescCol, enrolledStatusCol);
 
         // --- Available Courses ---
-        Label availableLabel = new Label("Available Courses");
+        Label availableLabel = new Label("Available Courses for Enrollment");
         availableLabel.getStyleClass().add("section-header");
 
         ObservableList<Course> available = DataStore.getInstance().getAvailableCourses(student);
         TableView<Course> availableTable = new TableView<>(available);
+        availableTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        availableTable.setPrefHeight(260);
 
         TableColumn<Course, String> availTitleCol = new TableColumn<>("Course");
         availTitleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -149,6 +180,7 @@ public class StudentDashboardView {
         availableTable.getColumns().addAll(availTitleCol, availDescCol, availReqCol, availYearCol);
 
         Button enrollButton = new Button("Enroll in Selected Course");
+        enrollButton.setPrefHeight(42);
         enrollButton.getStyleClass().add("primary-button");
         enrollButton.setOnAction(e -> {
             Course selected = availableTable.getSelectionModel().getSelectedItem();
@@ -167,11 +199,11 @@ public class StudentDashboardView {
             showAlert("Enrolled in " + selected.getTitle() + ".");
         });
 
-        VBox box = new VBox(8,
+        VBox box = new VBox(15,
                 enrolledLabel, enrolledTable,
                 new Separator(),
                 availableLabel, availableTable, enrollButton);
-        box.setPadding(new Insets(15));
+        box.setPadding(new Insets(20));
         return box;
     }
 
@@ -182,6 +214,9 @@ public class StudentDashboardView {
         }
 
         TableView<Assignment> table = new TableView<>(myAssignments);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefHeight(260);
+
         TableColumn<Assignment, String> titleCol = new TableColumn<>("Assignment");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         TableColumn<Assignment, String> dueCol = new TableColumn<>("Due Date");
@@ -192,6 +227,8 @@ public class StudentDashboardView {
         fileField.setPromptText("File name (e.g. assignment1.pdf)");
 
         Button submitButton = new Button("Submit Assignment");
+        submitButton.setPrefHeight(42);
+
         submitButton.getStyleClass().add("primary-button");
         submitButton.setOnAction(e -> {
             Assignment selected = table.getSelectionModel().getSelectedItem();
@@ -214,8 +251,8 @@ public class StudentDashboardView {
             showAlert("Assignment submitted successfully.");
         });
 
-        VBox box = new VBox(10, table, fileField, submitButton);
-        box.setPadding(new Insets(15));
+        VBox box = new VBox(15, table, fileField, submitButton);
+        box.setPadding(new Insets(20));
         return box;
     }
 
@@ -230,6 +267,9 @@ public class StudentDashboardView {
         }
 
         TableView<Submission> table = new TableView<>(mySubmissions);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefHeight(260);
+
         TableColumn<Submission, String> assignCol = new TableColumn<>("Assignment");
         assignCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getAssignment().getTitle()));
         TableColumn<Submission, String> scoreCol = new TableColumn<>("Score");
@@ -240,20 +280,32 @@ public class StudentDashboardView {
                 data.getValue().getGrade() == null ? "" : data.getValue().getGrade().getFeedback()));
         table.getColumns().addAll(assignCol, scoreCol, feedbackCol);
 
-        VBox box = new VBox(10, table);
-        box.setPadding(new Insets(15));
+        VBox box = new VBox(15, table);
+        box.setPadding(new Insets(20));
         return box;
     }
 
     private static VBox buildAnnouncementsTab(Student student) {
+
+        Label title = new Label("University Announcements");
+        title.getStyleClass().add("section-header");
+
         ListView<String> list = new ListView<>();
+
         for (Course c : student.getEnrolledCourses()) {
             for (Announcement a : c.getAnnouncements()) {
                 list.getItems().add("[" + c.getTitle() + "] " + a.getMessage());
             }
         }
-        VBox box = new VBox(10, list);
-        box.setPadding(new Insets(15));
+        VBox.setVgrow(list, Priority.ALWAYS);
+
+        VBox box = new VBox(15,
+                title,
+                list
+        );
+
+        box.setPadding(new Insets(20));
+
         return box;
     }
 

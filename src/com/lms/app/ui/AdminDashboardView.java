@@ -30,30 +30,62 @@ public class AdminDashboardView {
             if (now != null) Main.setSession(admin.getUserId(), now.getText());
         });
 
-        Scene scene = new Scene(root, 900, 650);
+        Scene scene = new Scene(root, 1200, 750);
         Styles.apply(scene);
         return scene;
     }
 
     private static HBox buildHeader(Admin admin) {
-        Label welcome = new Label("Welcome, " + admin.getName() + " (Administrator)");
+
+        Label university = new Label("Brisbane Technological University");
+        university.getStyleClass().add("header-label");
+
+        Label system = new Label("Learning Management System");
+        system.getStyleClass().add("header-sublabel");
+
+        Label welcome = new Label("Welcome, " + admin.getName());
         welcome.getStyleClass().add("header-label");
 
+        Label info = new Label("System Administrator");
+        info.getStyleClass().add("header-sublabel");
+
         Button logoutButton = new Button("Logout");
+        logoutButton.getStyleClass().add("primary-button");
+        logoutButton.setPrefWidth(110);
+        logoutButton.setPrefHeight(40);
+
         logoutButton.setOnAction(e -> {
             Main.clearSession();
             Main.getPrimaryStage().setScene(LoginView.createScene());
         });
 
-        HBox header = new HBox(welcome, spacer(), logoutButton);
+        VBox titles = new VBox(
+                university,
+                system,
+                welcome,
+                info
+        );
+
+        titles.setSpacing(2);
+
+        HBox header = new HBox(
+                titles,
+                spacer(),
+                logoutButton
+        );
+
         header.setPadding(new Insets(15));
         header.setAlignment(Pos.CENTER_LEFT);
         header.getStyleClass().add("header-bar");
+
         return header;
     }
 
     private static TabPane buildTabs(Admin admin) {
         TabPane tabs = new TabPane();
+        tabs.setTabMinWidth(180);
+        tabs.setTabMinHeight(45);
+
         tabs.getTabs().addAll(
                 new Tab("Manage Users", buildUsersTab()),
                 new Tab("Manage Courses", buildCoursesTab())
@@ -75,6 +107,8 @@ public class AdminDashboardView {
     // --- Manage Users tab ---
     private static VBox buildUsersTab() {
         TableView<User> table = new TableView<>(DataStore.getInstance().getUsers());
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefHeight(350);
 
         TableColumn<User, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -107,14 +141,22 @@ public class AdminDashboardView {
         });
 
         TextField nameField     = new TextField();  nameField.setPromptText("Full name");
+        nameField.setPrefWidth(180);
+
         TextField emailField    = new TextField();  emailField.setPromptText("Email");
+        nameField.setPrefWidth(220);
+
         TextField passwordField = new TextField();  passwordField.setPromptText("Password");
+        passwordField.setPrefWidth(150);
+
         ComboBox<String> roleBox = new ComboBox<>(
                 FXCollections.observableArrayList("Student", "Instructor", "Admin"));
         roleBox.setPromptText("Role");
+        roleBox.setPrefWidth(150);
 
         Button addButton = new Button("Add User");
         addButton.getStyleClass().add("primary-button");
+        addButton.setPrefHeight(42);
         addButton.setOnAction(e -> {
             if (nameField.getText().isBlank() || emailField.getText().isBlank()
                     || passwordField.getText().isBlank() || roleBox.getValue() == null) {
@@ -136,6 +178,8 @@ public class AdminDashboardView {
 
         // Soft-delete: marks user inactive, keeps the DB row with is_active = 0
         Button removeButton = new Button("Deactivate Selected");
+        removeButton.getStyleClass().add("danger-button"); // NEW
+        removeButton.setPrefHeight(42);
         removeButton.setOnAction(e -> {
             User selected = table.getSelectionModel().getSelectedItem();
             if (selected == null) {
@@ -162,14 +206,25 @@ public class AdminDashboardView {
         HBox form = new HBox(10, nameField, emailField, passwordField, roleBox, addButton, removeButton);
         form.setAlignment(Pos.CENTER_LEFT);
 
-        VBox box = new VBox(10, table, form);
-        box.setPadding(new Insets(15));
+        Label title = new Label("User Management");
+        title.getStyleClass().add("section-header");
+
+        VBox box = new VBox(
+                15,
+                title,
+                table,
+                form
+        );
+
+        box.setPadding(new Insets(20));
         return box;
     }
 
     // --- Manage Courses tab ---
     private static VBox buildCoursesTab() {
         TableView<Course> table = new TableView<>(DataStore.getInstance().getCourses());
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setPrefHeight(350);
 
         TableColumn<Course, String> titleCol = new TableColumn<>("Title");
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -180,38 +235,123 @@ public class AdminDashboardView {
                 data.getValue().getInstructor() == null ? "Unassigned" : data.getValue().getInstructor().getName()));
         table.getColumns().addAll(titleCol, descCol, instructorCol);
 
-        TextField titleField = new TextField(); titleField.setPromptText("Course title");
-        TextField descField  = new TextField(); descField.setPromptText("Description");
+        TextField titleField = new TextField();
+        titleField.setPromptText("Course title");
+        titleField.setPrefWidth(220);
+
+        TextField descField = new TextField();
+        descField.setPromptText("Description");
+        descField.setPrefWidth(300);
+
+        ComboBox<Instructor> instructorBox = new ComboBox<>();
+        instructorBox.setPromptText("Assign Instructor");
+
+        for (User user : DataStore.getInstance().getUsers()) {
+            if (user instanceof Instructor instructor) {
+                instructorBox.getItems().add(instructor);
+            }
+        }
+
+        instructorBox.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Instructor instructor, boolean empty) {
+                super.updateItem(instructor, empty);
+
+                if (empty || instructor == null) {
+                    setText(null);
+                } else {
+                    setText(instructor.getName());
+                }
+            }
+        });
+
+        instructorBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Instructor instructor, boolean empty) {
+                super.updateItem(instructor, empty);
+
+                if (empty || instructor == null) {
+                    setText(null);
+                } else {
+                    setText(instructor.getName());
+                }
+            }
+        });
+
 
         Button addButton = new Button("Add Course");
+        addButton.setPrefHeight(42);
         addButton.getStyleClass().add("primary-button");
+
         addButton.setOnAction(e -> {
             if (titleField.getText().isBlank()) {
                 showAlert("Enter a course title.");
                 return;
             }
+
+            Instructor selectedInstructor = instructorBox.getValue();
+
             String id = DataStore.getInstance().generateId("C");
-            DataStore.getInstance().addCourse(
-                    new Course(id, titleField.getText().trim(), descField.getText().trim(), null));
+
+            Course course = new Course(
+                    id,
+                    titleField.getText().trim(),
+                    descField.getText().trim(),
+                    selectedInstructor
+            );
+
+            DataStore.getInstance().addCourse(course);
+
+            if (selectedInstructor != null) {
+                selectedInstructor.getCoursesTaught().add(course);
+            }
+
             titleField.clear();
             descField.clear();
+            instructorBox.setValue(null);
         });
 
         Button removeButton = new Button("Remove Selected");
+        removeButton.getStyleClass().add("danger-button");
+        removeButton.setPrefHeight(42);
+
         removeButton.setOnAction(e -> {
             Course selected = table.getSelectionModel().getSelectedItem();
+
             if (selected == null) {
                 showAlert("Select a course to remove.");
                 return;
             }
+
+            if (selected.getInstructor() != null) {
+                selected.getInstructor().getCoursesTaught().remove(selected);
+            }
+
             DataStore.getInstance().removeCourse(selected);
         });
 
-        HBox form = new HBox(10, titleField, descField, addButton, removeButton);
+        HBox form = new HBox(
+                10,
+                titleField,
+                descField,
+                instructorBox,
+                addButton,
+                removeButton
+        );
+
         form.setAlignment(Pos.CENTER_LEFT);
 
-        VBox box = new VBox(10, table, form);
-        box.setPadding(new Insets(15));
+        Label title = new Label("Course Management");
+        title.getStyleClass().add("section-header");
+
+        VBox box = new VBox(
+                15,
+                title,
+                table,
+                form
+        );
+
+        box.setPadding(new Insets(20));
         return box;
     }
 

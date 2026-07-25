@@ -21,7 +21,7 @@ public class Main extends Application {
 
         primaryStage = stage;
 
-        stage.setTitle("LMS - Learning Management System");
+        stage.setTitle("Brisbane Technological University LMS");
         stage.setMinWidth(800);
         stage.setMinHeight(600);
 
