@@ -119,32 +119,25 @@ The following UML diagrams were created during the system design phase.
 
 ## Use Case Diagram
 
-<img width="736" height="652" alt="useCaseDiagram drawio" src="https://github.com/user-attachments/assets/bdb77f91-7a0b-4696-a8ed-31acc919f8a4" />
-
+![Use Case Diagram](docs/uml/useCaseDiagram.jpg)
 
 ---
 
 ## Activity Diagram
 
-<img width="762" height="902" alt="ActivityDiagram drawio" src="https://github.com/user-attachments/assets/5ccf5891-5ba1-4457-b313-7ab519f14832" />
-
+![Activity Diagram](docs/uml/ActivityDiagram.jpg)
 
 ---
 
 ## Sequence Diagram
 
-<img width="1100" height="710" alt="image" src="https://github.com/user-attachments/assets/43917ffe-7a09-4da0-98db-0b2d99574a87" />
-
-
+![Sequence Diagram](docs/uml/SequenceDiagram.jpg)
 
 ---
 
 ## Class Diagram
 
-<img width="1952" height="1237" alt="classDiagram drawio" src="https://github.com/user-attachments/assets/ff0b25d5-7d8d-43d0-8eff-4e34192b310c" />
-
-
----
+![Class Diagram](docs/uml/classDiagram.jpg)
 
 # Database Design
 
